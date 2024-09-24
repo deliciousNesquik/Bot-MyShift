@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.database.requests import get_all_company, get_employee
+from app.database.requests import get_all_company, get_all_employee
 from app.resources import messages
 
 keyboard_whois: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=[
@@ -18,6 +18,10 @@ keyboard_confirm_create_company: InlineKeyboardMarkup = InlineKeyboardMarkup(inl
 
 keyboard_back_to_manage_company: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text=messages.message_button_back, callback_data='cancel-manage-company')]
+])
+
+keyboard_back_to_employee: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text=messages.message_button_back, callback_data='employee-view')]
 ])
 
 keyboard_manage_company = ReplyKeyboardMarkup(keyboard=
@@ -49,11 +53,16 @@ async def get_manage_company_employee(company_id: int):
         InlineKeyboardButton(text="Создать приглашение", callback_data=f'invite-employee_{company_id}')
     )
 
-    employee = await get_employee(company_id=company_id)
+    employee = await get_all_employee(company_id=company_id)
     for employ in employee:
-        keyboard_manage_company_employee.add(
-            InlineKeyboardButton(text=f"{str(employ.full_name)}", callback_data=f'employee_{employ.id}')
-        )
+        if employ.full_name == "":
+            keyboard_manage_company_employee.add(
+                InlineKeyboardButton(text=f"Нет данных", callback_data=f'employee_{employ.id}')
+            )
+        else:
+            keyboard_manage_company_employee.add(
+                InlineKeyboardButton(text=f"{str(employ.full_name)}", callback_data=f'employee_{employ.id}')
+            )
 
     return keyboard_manage_company_employee.adjust(1).as_markup()
 
@@ -66,7 +75,6 @@ async def get_manage_company_keyboard(tg_id: int, callback_prefix: str, add_crea
     if add_create_delete_buttons:
         keyboard_menu_manage_company.add(
             InlineKeyboardButton(text=messages.message_button_create_company, callback_data='new-company'),
-            #InlineKeyboardButton(text=messages.message_button_delete_company, callback_data='delete-company')
         )
 
     for company in all_company:

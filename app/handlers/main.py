@@ -18,7 +18,7 @@ async def cmd_start(message: Message, bot: Bot):
 
     if len(company_id) > 0:
 
-        company = await rq.get_company(
+        company = await rq.get_company_by_id(
             company_id=company_id
         )
 
@@ -32,7 +32,7 @@ async def cmd_start(message: Message, bot: Bot):
             await message.answer(
                 text=await messages.message_get_invite(
                     company_name=company.company_name,
-                    company_address=company.company_adress
+                    company_address=company.company_address
                 ),
                 reply_markup=await keyboards.keyboard_set_employee_data(employee.id)
             )

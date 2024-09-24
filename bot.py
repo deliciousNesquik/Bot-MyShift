@@ -2,12 +2,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from app.handlers.company.create_company import router_create_company
+from app.handlers.company.create import router_create_company
 from app.handlers.main import router_main
-from app.handlers.company.manage_company import router_manage_company
-from app.handlers.shifts.get_shift_info import router_shift_info
+from app.handlers.company.manage import router_manage_company
+from app.handlers.shifts.set_data import router_shift_info
 from app.handlers.employee.registration import router_employee_register
 from app.handlers.employer.main import router_employer
+from app.handlers.company.employee import router_manage_employee
 from app.database.models import async_main
 
 from data import config
@@ -33,7 +34,8 @@ async def main():
         router_manage_company,
         router_shift_info,
         router_employee_register,
-        router_employer
+        router_employer,
+        router_manage_employee,
     )
     await dispatcher.start_polling(bot)
 

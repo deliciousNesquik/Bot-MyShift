@@ -3,10 +3,10 @@ from app.database.schemas import Company, CompanyShiftConfiguration, Employee
 from sqlalchemy import select, func
 
 
-async def set_company(company_name: str, company_address: str, company_type_of_activity: str, tg_id: int,
+async def get_company(company_name: str, company_address: str, company_type_of_activity: str, tg_id: int,
                       company_manager_name: str, company_manager_phone: str, company_manager_post: str):
     async with async_session() as session:
-        company = await session.scalar(
+        return await session.scalar(
             select(Company).where(
                 Company.company_name == company_name,
                 Company.company_address == company_address,
@@ -18,7 +18,19 @@ async def set_company(company_name: str, company_address: str, company_type_of_a
             )
         )
 
-        if not company:
+
+async def get_company_by_id(company_id: int):
+    async with async_session() as session:
+        return await session.scalar(select(Company).where(
+            Company.id == company_id
+        ))
+
+
+async def set_company(company_name: str, company_address: str, company_type_of_activity: str, tg_id: int,
+                      company_manager_name: str, company_manager_phone: str, company_manager_post: str):
+    async with async_session() as session:
+        if not await get_company(company_name, company_address, company_type_of_activity, tg_id, company_manager_name,
+                                 company_manager_phone, company_manager_post):
             session.add(
                 Company(
                     company_name=company_name,
@@ -31,17 +43,9 @@ async def set_company(company_name: str, company_address: str, company_type_of_a
                 )
             )
             await session.commit()
-            return await session.scalar(
-                select(Company).where(
-                    Company.company_name == company_name,
-                    Company.company_address == company_address,
-                    Company.company_type_of_activity == company_type_of_activity,
-                    Company.tg_id == tg_id,
-                    Company.company_manager_name == company_manager_name,
-                    Company.company_manager_phone == company_manager_phone,
-                    Company.company_manager_post == company_manager_post
-                )
-            )
+
+            return await get_company(company_name, company_address, company_type_of_activity, tg_id,
+                                     company_manager_name, company_manager_phone, company_manager_post)
         else:
             return -1
 
@@ -53,14 +57,7 @@ async def get_all_company(telegram_id: int):
         ))
 
 
-async def get_company(company_id: int):
-    async with async_session() as session:
-        return await session.scalar(select(Company).where(
-            Company.id == company_id
-        ))
-
-
-async def get_shift_config(company_id: int):
+async def get_session_config(company_id: int):
     async with async_session() as session:
         return await session.scalar(select(CompanyShiftConfiguration).where(
             CompanyShiftConfiguration.company_id == company_id
@@ -122,32 +119,47 @@ async def count_employee(company_id: int):
         return rows.all()[0]
 
 
-async def get_employee(company_id: int):
+async def get_employee(telegram_id: int = None, employee_id: int = None):
+    async with async_session() as session:
+
+        if telegram_id is not None:
+            return await session.scalar(
+                select(Employee)
+                .where(
+                    Employee.telegram_id == telegram_id
+                )
+            )
+        else:
+            return await session.scalar(
+                select(Employee).where(
+                    Employee.id == employee_id
+                )
+            )
+
+
+async def get_all_employee(company_id: int):
     async with async_session() as session:
         return await session.scalars(select(Employee).where(Employee.company_id == company_id))
 
 
 async def update_employee(employee_id: int, full_name: str, age: int, phone: str, bank: str):
     async with async_session() as session:
-        employee = await session.scalar(
-            select(Employee).where(
-                Employee.id == employee_id
-            )
+        employee = await get_employee(
+            employee_id=employee_id
         )
+
         employee.full_name = full_name
         employee.age = age
         employee.phone = phone
         employee.bank = bank
+
         await session.commit()
 
 
 async def set_employee(telegram_id: int, company_id: int, start_date_work: str):
     async with async_session() as session:
-        employee = await session.scalar(
-            select(Employee).where(
-                Employee.telegram_id == telegram_id,
-                Employee.company_id == company_id,
-            )
+        employee = await get_employee(
+            telegram_id=telegram_id
         )
 
         if not employee:
