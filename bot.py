@@ -9,12 +9,17 @@ from app.handlers.shifts.set_data import router_shift_info
 from app.handlers.employee.registration import router_employee_register
 from app.handlers.employer.main import router_employer
 from app.handlers.company.employee import router_manage_employee
+from app.handlers.company.schedule import router_schedule
 from app.database.models import async_main
+
+from app.modules.company_chooser import CompanyChooser
 
 from data import config
 import asyncio
 import logging
 import sys
+
+company_chooser = CompanyChooser()
 
 
 async def main():
@@ -36,6 +41,7 @@ async def main():
         router_employee_register,
         router_employer,
         router_manage_employee,
+        router_schedule,
     )
     await dispatcher.start_polling(bot)
 
